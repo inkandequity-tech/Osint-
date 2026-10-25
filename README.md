@@ -1,3 +1,13 @@
+---
+title: Video Finder
+emoji: 🎞️
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # Osint-: Video Finder
 
 A small web app for finding videos across the open web from an image and a short description.
@@ -29,6 +39,33 @@ python app.py
 Open http://localhost:5000
 
 The first search downloads the CLIP model (about 600 MB, once). After that it is cached.
+
+## Host it online (use it from your phone in Chrome)
+
+The easiest free option is a Hugging Face Space (Docker, free CPU tier with 16 GB RAM, enough for CLIP).
+The header at the top of this file is what Hugging Face reads, so leave it in place.
+
+1. Make a free account at https://huggingface.co and create a token with **write** access
+   (Settings > Access Tokens).
+2. Create a new Space: https://huggingface.co/new-space
+   - SDK: **Docker** (Blank)
+   - Hardware: **CPU basic (free)**
+   - Visibility: **Private** (recommended, the app searches unfiltered)
+3. In the Space, open **Settings > Variables and secrets** and add two **secrets**:
+   - `APP_PASSWORD`: a long password of your choice
+   - `APP_USER`: a username (optional, defaults to `admin`)
+4. Push this repo to the Space:
+   ```bash
+   git remote add space https://huggingface.co/spaces/<your-hf-username>/<space-name>
+   git push space main
+   ```
+   When asked for a password, paste your Hugging Face write token.
+5. Wait for the build to finish (about 5 to 10 minutes the first time). Then open the Space URL
+   in Chrome on your phone, enter the username and password, and use it like any website.
+   Tip: Chrome menu > **Add to Home screen** gives it an app icon.
+
+The app refuses to start if `APP_PASSWORD` is missing, so a hosted copy is never left open.
+Free Spaces go to sleep after inactivity; the first visit afterwards takes a minute to wake it.
 
 ## Usage
 
@@ -68,7 +105,8 @@ Use this to find publicly available videos only. Do not use it to identify, trac
 ## Project layout
 
 ```
-app.py             Flask app, search + ranking logic, single-page UI
+app.py             Flask app, search + ranking logic, single-page UI, optional login
 requirements.txt   Python dependencies
+Dockerfile         Container for hosting (Hugging Face Spaces, or any Docker host)
 README.md          This file
 ```

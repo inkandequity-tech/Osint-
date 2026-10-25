@@ -6,11 +6,14 @@ Video Finder: upload an image + describe the scene, get matching videos from acr
 - Results are re-ranked by how similar each video's thumbnail is to your image
   and how well its title matches your text.
 """
+import hmac
 import io
+import os
+import sys
 from concurrent.futures import ThreadPoolExecutor
 
 import requests
-from flask import Flask, jsonify, render_template_string, request
+from flask import Flask, Response, jsonify, render_template_string, request
 from PIL import Image
 from sentence_transformers import SentenceTransformer, util
 
@@ -21,6 +24,32 @@ except ImportError:  # pragma: no cover
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 15 * 1024 * 1024  # 15 MB upload cap
+
+# --- Password protection (for hosting online) --------------------------------
+# Set APP_PASSWORD (and optionally APP_USER) to require a login in the browser.
+# With REQUIRE_AUTH=1 (set in the Dockerfile) the app refuses to start without
+# a password, so a hosted copy can never be left open by accident.
+APP_USER = os.environ.get("APP_USER", "admin")
+APP_PASSWORD = os.environ.get("APP_PASSWORD", "")
+
+if os.environ.get("REQUIRE_AUTH") == "1" and not APP_PASSWORD:
+    sys.exit("APP_PASSWORD is not set. Add it as a secret/environment variable and restart.")
+
+
+@app.before_request
+def require_login():
+    if not APP_PASSWORD:
+        return None  # local use, no auth
+    auth = request.authorization
+    ok = (
+        auth is not None
+        and hmac.compare_digest(auth.username or "", APP_USER)
+        and hmac.compare_digest(auth.password or "", APP_PASSWORD)
+    )
+    if ok:
+        return None
+    return Response("Login required", 401, {"WWW-Authenticate": 'Basic realm="Video Finder"'})
+
 
 _model = None
 
@@ -197,4 +226,4 @@ f.onsubmit=async e=>{e.preventDefault();go.disabled=true;grid.innerHTML='';
 """
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=False)
