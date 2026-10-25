@@ -64,6 +64,18 @@ The header at the top of this file is what Hugging Face reads, so leave it in pl
    in Chrome on your phone, enter the username and password, and use it like any website.
    Tip: Chrome menu > **Add to Home screen** gives it an app icon.
 
+**Faster: one command.** Instead of steps 2 to 4, run the included script:
+
+```bash
+pip install huggingface_hub
+export HF_TOKEN=hf_...            # your write token (keep it private)
+export APP_PASSWORD='choose-one'
+python deploy_hf.py video-finder
+```
+
+It creates the private Space, sets the password secret, uploads the files and prints the link.
+To update later, run it again.
+
 The app refuses to start if `APP_PASSWORD` is missing, so a hosted copy is never left open.
 Free Spaces go to sleep after inactivity; the first visit afterwards takes a minute to wake it.
 
@@ -108,5 +120,6 @@ Use this to find publicly available videos only. Do not use it to identify, trac
 app.py             Flask app, search + ranking logic, single-page UI, optional login
 requirements.txt   Python dependencies
 Dockerfile         Container for hosting (Hugging Face Spaces, or any Docker host)
+deploy_hf.py       One-command deploy to a private Hugging Face Space
 README.md          This file
 ```
